@@ -32,7 +32,7 @@ func (dp *DeployPrinter) Print(r *handler.DeployResp) bool {
 		dp.firstPrint = false
 
 		ref := r.Source.Ref
-		fmt.Printf("🔍  Resolving ref as %s\n", ref.GivenRef.GitRef())
+		fmt.Printf("🔍  Resolving ref as %s\n", ref.GivenRef)
 
 		if ref.PullRequest == nil {
 			fmt.Println("❌  Pull Request not found for ref")
