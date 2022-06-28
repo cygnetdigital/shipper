@@ -75,6 +75,10 @@ var Deploy = &cli.Command{
 
 		printer.Stop()
 
+		if !dres.Source.Ref.PullRequest.Merged {
+			return nil
+		}
+
 		resp := cliutil.StringPrompt("Deploy to production?")
 		if resp != "YES" {
 			return fmt.Errorf("aborted: only YES is accepted")
@@ -95,6 +99,8 @@ var Deploy = &cli.Command{
 		if !dres2.Complete {
 			return fmt.Errorf("deployment failed")
 		}
+
+		fmt.Printf("\nDeployment complete\n")
 
 		return nil
 	},

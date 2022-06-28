@@ -128,7 +128,7 @@ func mapServices(source *source.Source, dest *destination.Destination) []*Servic
 		}
 
 		if dest != nil {
-			s2.NextDeployVersion = dest.Services.NextDeployVersionFor(s.Name)
+			s2.CurrentDeployVersion = dest.Services.CurrentDeployVersionFor(s.Name)
 			s2.NextDeployVersion = dest.Services.NextDeployVersionFor(s.Name)
 		}
 
