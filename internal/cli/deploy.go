@@ -75,7 +75,7 @@ var Deploy = &cli.Command{
 
 		printer.Stop()
 
-		if !dres.Source.Ref.PullRequest.Merged {
+		if dres.Source.Ref.CommitHash == "" {
 			return nil
 		}
 

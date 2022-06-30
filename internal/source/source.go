@@ -49,6 +49,9 @@ type Ref struct {
 	// be empty.
 	CommitHash GitHash
 
+	// username of person committed by
+	CommitedByUsername string
+
 	// Details about the PullRequest
 	PullRequest *PullRequest
 }

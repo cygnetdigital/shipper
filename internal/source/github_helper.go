@@ -20,6 +20,19 @@ type GithubHelper struct {
 // Resolve a ref using the github API. Currently supporting a ref which is a
 // PullRequest number or branch name.
 func (g *GithubHelper) Resolve(ctx context.Context, ref string) (*Ref, error) {
+	if ref == "main" {
+		branch, _, err := g.client.Repositories.GetBranch(ctx, g.owner, g.repo, "main", false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get main branch: %w", err)
+		}
+
+		return &Ref{
+			GivenRef:           "main",
+			CommitHash:         GitHash(branch.GetCommit().GetSHA()),
+			CommitedByUsername: branch.GetCommit().GetAuthor().GetLogin(),
+		}, nil
+	}
+
 	// resolve a integer (presumed to be a PR number)
 	if n, err := strconv.Atoi(ref); err == nil {
 		pr, _, err := g.client.PullRequests.Get(ctx, g.owner, g.repo, n)

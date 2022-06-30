@@ -34,22 +34,26 @@ func (dp *DeployPrinter) Print(r *handler.DeployResp) bool {
 		ref := r.Source.Ref
 		fmt.Printf("🔍  Resolving ref as %s\n", ref.GivenRef)
 
-		if ref.PullRequest == nil {
-			fmt.Println("❌  Pull Request not found for ref")
+		if ref.CommitHash == "" {
+			fmt.Println("❌  Commit not found for ref")
 
 			return false
 		}
 
 		pr := ref.PullRequest
-		fmt.Printf("💻  #%d: %s\n", pr.Number, pr.Title)
+		if pr != nil {
+			fmt.Printf("💻  #%d: %s\n", pr.Number, pr.Title)
 
-		if !pr.Merged {
-			fmt.Printf("❌  PR not merged, cannot continue deploy\n")
+			if !pr.Merged {
+				fmt.Printf("❌  PR not merged, cannot continue deploy\n")
 
-			return false
+				return false
+			}
+
+			fmt.Printf("🔀  Merged into %s by %s → %s\n", pr.BaseCommit.Ref, pr.MergedByUsername, pr.MergeCommitHash)
+		} else {
+			fmt.Printf("🔀  Commit %s found by %s\n", ref.CommitHash, ref.CommitedByUsername)
 		}
-
-		fmt.Printf("🔀  Merged into %s by %s → %s\n", pr.BaseCommit.Ref, pr.MergedByUsername, pr.MergeCommitHash)
 
 		// if checks are running, lets start the writer
 		if r.Source.ChecksRunning {
