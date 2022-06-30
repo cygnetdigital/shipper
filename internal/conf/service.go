@@ -14,5 +14,15 @@ type ServiceBuild struct {
 
 // ServiceDeploy part of service file config
 type ServiceDeploy struct {
-	Template string `yaml:"template"`
+	Template string               `yaml:"template"`
+	Config   []*ServiceConfigItem `yaml:"config"`
+}
+
+// ServiceConfigItem is a single config item
+type ServiceConfigItem struct {
+	// Name of the config item
+	Name string `yaml:"name"`
+
+	// Hard coded values for this config
+	Values map[string]string `yaml:"values"`
 }

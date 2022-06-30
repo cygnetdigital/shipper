@@ -2,10 +2,10 @@ package destination
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"path"
 	"strings"
+	"text/template"
 )
 
 // DeployContext ...
@@ -27,6 +27,9 @@ type DeployContext struct {
 
 	// Deployment image of service. e.g. gcr.io/foo/service:v1.0.0
 	DeployImage string
+
+	// DeployVariables are environment variables to pass to the deployment
+	DeployVariables map[string]string
 
 	// Namespace to put deployment in. e.g. default
 	Namespace string
