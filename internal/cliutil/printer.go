@@ -49,7 +49,7 @@ func (dp *DeployPrinter) Print(r *handler.DeployResp) bool {
 			return false
 		}
 
-		fmt.Printf("🔀  Merged into %s by %s -> %s\n", pr.BaseCommit.Ref, pr.MergedByUsername, pr.MergeCommitHash)
+		fmt.Printf("🔀  Merged into %s by %s → %s\n", pr.BaseCommit.Ref, pr.MergedByUsername, pr.MergeCommitHash)
 
 		// if checks are running, lets start the writer
 		if r.Source.ChecksRunning {
@@ -92,8 +92,8 @@ func (dp *DeployPrinter) printServices(w io.Writer, resp *handler.DeployResp) {
 
 		switch svc.BuildStatus.(type) {
 		case *source.BuildStatusComplete:
-			if svc.NextDeployVersion > 0 {
-				fmt.Fprintf(w, "   👉  %s v%d → v%d\n", nameWithPadding, svc.CurrentDeployVersion, svc.NextDeployVersion)
+			if svc.NextDeployVersion != "" {
+				fmt.Fprintf(w, "   👉  %s → %s\n", nameWithPadding, svc.NextDeployVersion)
 			} else {
 				fmt.Fprintf(w, "   👉  %s %s\n", nameWithPadding, svc.BuildStatus.String())
 			}

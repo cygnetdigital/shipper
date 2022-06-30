@@ -8,6 +8,16 @@ type Destination struct {
 	Services    Services
 }
 
+// NextDeployVersion returns the next deploy version for the given service
+func (d *Destination) NextDeployVersion(project, service string) (string, error) {
+	svc := d.Services.LookupByProjectAndName(project, service)
+	if svc == nil {
+		return firstVersionString, nil
+	}
+
+	return svc.NextDeployVersion()
+}
+
 // DeployParams are required to create a new deployment in the destination
 type DeployParams struct {
 	ProjectName string
@@ -16,15 +26,24 @@ type DeployParams struct {
 
 // ServiceDeployParams are the required params to deploy a service
 type ServiceDeployParams struct {
-	ServiceConfig *shipper.Service
-	Name          string
-	Version       int
-	SlugName      string
-	DeployImage   string
-	Namespace     string
+	Config   *shipper.Service
+	Version  string
+	ImageTag string
 }
 
 // DeployResp is the response from a deploy
 type DeployResp struct {
+	Hash string
+}
+
+// ReleaseParams ...
+type ReleaseParams struct {
+	Project string
+	Service string
+	Version string
+}
+
+// ReleaseResp ...
+type ReleaseResp struct {
 	Hash string
 }

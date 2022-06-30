@@ -5,19 +5,102 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"strings"
 )
 
+// DeployContext ...
+type DeployContext struct {
+	// Name of the project this belongs to
+	Project string
+
+	// Name of service. e.g. service.foo
+	Name string
+
+	// Slugified name of service. e.g. s-foo
+	SlugName string
+
+	// Version of service to deploy
+	Version string
+
+	// slugified name of service with version. e.g. s-foo-v1
+	SlugNameVersion string
+
+	// Deployment image of service. e.g. gcr.io/foo/service:v1.0.0
+	DeployImage string
+
+	// Namespace to put deployment in. e.g. default
+	Namespace string
+}
+
 // WriteDeployBundle ...
-func WriteDeployBundle(templatesDir, manifestRoot string, params *ServiceDeployParams) error {
-	templateDir := path.Join(templatesDir, "deploy", params.ServiceConfig.Deploy.Template)
-	deployDir := path.Join(manifestRoot, params.Name, fmt.Sprintf("v%d", params.Version))
+func WriteDeployBundle(templatesDir, manifestRoot string, template string, args *DeployContext) error {
+	deployDir := path.Join(manifestRoot, args.Name, args.Version)
 
 	if err := ensureDir(deployDir); err != nil {
 		return fmt.Errorf("failed to ensure deploy dir exists '%s': %w", deployDir, err)
 	}
 
-	if err := writeTemplateOut(templateDir, deployDir, params); err != nil {
+	templateDir := path.Join(templatesDir, "deploy", template)
+
+	if err := writeTemplateOut(templateDir, deployDir, args); err != nil {
 		return fmt.Errorf("failed to write deploy bundle: %w", err)
+	}
+
+	return nil
+}
+
+// ReleaseContext ...
+type ReleaseContext struct {
+	// Name of the project this belongs to
+	Project string
+
+	// Name of service. e.g. service.foo
+	Name string
+
+	// Slugified name of service. e.g. s-foo
+	SlugName string
+
+	// Version of service to release
+	Version string
+
+	// slugified name of service with version to release. e.g. s-foo-v1
+	SlugNameVersion string
+
+	// Namespace to put service in. e.g. default
+	Namespace string
+}
+
+var releaseTemplate = `
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .SlugName }}
+  namespace: {{ .Namespace }}
+  annotations:
+    shipper/bundle: release
+    shipper/project: {{ .Project }}
+    shipper/service-name: {{ .Name }}
+    shipper/current-release: {{ .Version }}
+spec:
+  ports:
+    - name: http
+      port: 8000
+  selector:
+    app: {{ .SlugName }}
+    version: {{ .Version }}
+`
+
+// WriteReleaseBundle ...
+func WriteReleaseBundle(manifestRoot string, args *ReleaseContext) error {
+	t, err := template.New("service.yaml").Parse(strings.TrimSpace(releaseTemplate))
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	releaseDir := path.Join(manifestRoot, args.Name)
+
+	if err := writeTemplate(t, releaseDir, args); err != nil {
+		return fmt.Errorf("failed to write release bundle: %w", err)
 	}
 
 	return nil
@@ -43,15 +126,23 @@ func writeTemplateOut(templateDir, destDir string, arg any) error {
 			continue
 		}
 
-		f, err := os.Create(path.Join(destDir, tp.Name()))
-		if err != nil {
-			return fmt.Errorf("failed to create file %s: %w", tp.Name(), err)
-		}
-
-		if err := tp.Execute(f, arg); err != nil {
-			return fmt.Errorf("failed to execute template %s: %w", tp.Name(), err)
+		if err := writeTemplate(tp, destDir, arg); err != nil {
+			return fmt.Errorf("failed to write template %s: %w", tp.Name(), err)
 		}
 	}
 
 	return nil
+}
+
+func writeTemplate(tp *template.Template, destDir string, arg any) error {
+	f, err := os.Create(path.Join(destDir, tp.Name()))
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %w", tp.Name(), err)
+	}
+
+	if err := tp.Execute(f, arg); err != nil {
+		return fmt.Errorf("failed to execute template %s: %w", tp.Name(), err)
+	}
+
+	return f.Close()
 }

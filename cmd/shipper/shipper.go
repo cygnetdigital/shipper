@@ -16,6 +16,7 @@ func main() {
 		Version: "dev",
 		Commands: []*cli.Command{
 			shippercli.Deploy,
+			shippercli.Release,
 			shippercli.CI,
 		},
 	}

@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"path"
 
 	"github.com/cygnetdigital/shipper/internal/destination"
 	"github.com/cygnetdigital/shipper/internal/source"
@@ -37,15 +36,14 @@ type DeployResp struct {
 // ServiceDeployRequest ...
 type ServiceDeployRequest struct {
 	ServiceName   string
-	DeployVersion int
+	DeployVersion string
 }
 
 // ServiceDeployStatus ...
 type ServiceDeployStatus struct {
-	Name                 string
-	BuildStatus          source.BuildStatus
-	CurrentDeployVersion int
-	NextDeployVersion    int
+	Name              string
+	BuildStatus       source.BuildStatus
+	NextDeployVersion string
 }
 
 // Deploy ...
@@ -55,11 +53,13 @@ func (h *LocalHandler) Deploy(ctx context.Context, p *DeployParams) (*DeployResp
 		return nil, fmt.Errorf("failed to get source: %w", err)
 	}
 
+	svcs, err := mapServices(source, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	if !source.ChecksComplete {
-		return &DeployResp{
-			Source:   source,
-			Services: mapServices(source, nil),
-		}, nil
+		return &DeployResp{Source: source, Services: svcs}, nil
 	}
 
 	// no confirm yet, so don't do the deploy
@@ -69,10 +69,12 @@ func (h *LocalHandler) Deploy(ctx context.Context, p *DeployParams) (*DeployResp
 			return nil, fmt.Errorf("failed to get destination: %w", err)
 		}
 
-		return &DeployResp{
-			Source:   source,
-			Services: mapServices(source, dest),
-		}, nil
+		svcs, err := mapServices(source, dest)
+		if err != nil {
+			return nil, err
+		}
+
+		return &DeployResp{Source: source, Services: svcs}, nil
 	}
 
 	// Check the confirm git hash lines up
@@ -91,20 +93,10 @@ func (h *LocalHandler) Deploy(ctx context.Context, p *DeployParams) (*DeployResp
 			return nil, fmt.Errorf("service %s not found in source", creq.ServiceName)
 		}
 
-		slug, err := SlugifyServiceName(creq.ServiceName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to slugify service name %s: %w", creq.ServiceName, err)
-		}
-
-		shorthash := source.Ref.CommitHash.Short()
-
 		depreq.Services = append(depreq.Services, &destination.ServiceDeployParams{
-			ServiceConfig: svc.Service,
-			Name:          creq.ServiceName,
-			SlugName:      fmt.Sprintf("%s-v%d", slug, creq.DeployVersion),
-			Version:       creq.DeployVersion,
-			DeployImage:   fmt.Sprintf("%s:%s", path.Join(source.Project.RegistryPrefix, creq.ServiceName), shorthash),
-			Namespace:     source.Project.Gitops.Namespace,
+			Config:   svc.Service,
+			Version:  creq.DeployVersion,
+			ImageTag: source.Ref.CommitHash.Short(),
 		})
 	}
 
@@ -118,7 +110,7 @@ func (h *LocalHandler) Deploy(ctx context.Context, p *DeployParams) (*DeployResp
 	}, nil
 }
 
-func mapServices(source *source.Source, dest *destination.Destination) []*ServiceDeployStatus {
+func mapServices(source *source.Source, dest *destination.Destination) ([]*ServiceDeployStatus, error) {
 	services := []*ServiceDeployStatus{}
 
 	for _, s := range source.Services {
@@ -128,12 +120,16 @@ func mapServices(source *source.Source, dest *destination.Destination) []*Servic
 		}
 
 		if dest != nil {
-			s2.CurrentDeployVersion = dest.Services.CurrentDeployVersionFor(s.Name)
-			s2.NextDeployVersion = dest.Services.NextDeployVersionFor(s.Name)
+			v, err := dest.NextDeployVersion(dest.ProjectName, s.Name)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get next deploy version for %s/%s: %w", dest.ProjectName, s.Name, err)
+			}
+
+			s2.NextDeployVersion = v
 		}
 
 		services = append(services, s2)
 	}
 
-	return services
+	return services, nil
 }
