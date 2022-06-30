@@ -17,6 +17,7 @@ func main() {
 		Commands: []*cli.Command{
 			shippercli.Deploy,
 			shippercli.Release,
+			shippercli.Remove,
 			shippercli.CI,
 		},
 	}

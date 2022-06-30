@@ -47,3 +47,15 @@ type ReleaseParams struct {
 type ReleaseResp struct {
 	Hash string
 }
+
+// RemoveParams ...
+type RemoveParams struct {
+	Project string
+	Service string
+	Version string
+}
+
+// RemoveResp ...
+type RemoveResp struct {
+	Hash string
+}

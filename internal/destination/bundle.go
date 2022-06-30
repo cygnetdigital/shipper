@@ -49,6 +49,17 @@ func WriteDeployBundle(templatesDir, manifestRoot string, template string, args 
 	return nil
 }
 
+// DeleteDeployBundle ...
+func DeleteDeployBundle(manifestRoot string, serviceName, version string) error {
+	deployDir := path.Join(manifestRoot, serviceName, version)
+
+	if err := os.RemoveAll(deployDir); err != nil {
+		return fmt.Errorf("failed to delete deploy dir '%s': %w", deployDir, err)
+	}
+
+	return nil
+}
+
 // ReleaseContext ...
 type ReleaseContext struct {
 	// Name of the project this belongs to

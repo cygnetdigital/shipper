@@ -24,4 +24,5 @@ type Destination interface {
 	Get(ctx context.Context, project string) (*destination.Destination, error)
 	Deploy(ctx context.Context, p *destination.DeployParams) (*destination.DeployResp, error)
 	Release(ctx context.Context, p *destination.ReleaseParams) (*destination.ReleaseResp, error)
+	Remove(ctx context.Context, p *destination.RemoveParams) (*destination.RemoveResp, error)
 }
