@@ -14,8 +14,14 @@ type ServiceBuild struct {
 
 // ServiceDeploy part of service file config
 type ServiceDeploy struct {
-	Template string               `yaml:"template"`
-	Config   []*ServiceConfigItem `yaml:"config"`
+	// Template is the name of the template to use for the deployment
+	Template string `yaml:"template"`
+
+	// SecretMounts are used to mount secrets into the container
+	SecretMounts []*SecretMount `yaml:"secretMounts"`
+
+	// Config is used to setup environment variables into the container
+	Config []*ServiceConfigItem `yaml:"config"`
 }
 
 // ServiceConfigItem is a single config item
@@ -25,4 +31,11 @@ type ServiceConfigItem struct {
 
 	// Hard coded values for this config
 	Values map[string]string `yaml:"values"`
+}
+
+// SecretMount is a single secret mount
+type SecretMount struct {
+	MountName  string `yaml:"mountName"`
+	SecretName string `yaml:"secretName"`
+	MountPath  string `yaml:"mountPath"`
 }

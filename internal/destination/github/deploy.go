@@ -59,6 +59,7 @@ func (s *Github) Deploy(ctx context.Context, p *destination.DeployParams) (*dest
 			SlugNameVersion: fmt.Sprintf("%s-%s", slug, sp.Version),
 			DeployImage:     fmt.Sprintf("%s:%s", path.Join(s.registry, sp.Config.Name), sp.ImageTag),
 			DeployVariables: dv,
+			SecretMounts:    sp.Config.Deploy.SecretMounts,
 			Namespace:       s.namespace,
 		}
 

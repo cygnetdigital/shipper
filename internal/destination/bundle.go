@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
+
+	"github.com/cygnetdigital/shipper/internal/conf"
 )
 
 // DeployContext ...
@@ -30,6 +32,9 @@ type DeployContext struct {
 
 	// DeployVariables are environment variables to pass to the deployment
 	DeployVariables map[string]string
+
+	// SecretMounts are used to mount secrets into the container
+	SecretMounts []*conf.SecretMount
 
 	// Namespace to put deployment in. e.g. default
 	Namespace string
