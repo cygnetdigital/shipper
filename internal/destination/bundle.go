@@ -103,7 +103,8 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 8000
+      port: 80
+			targetPort: 8000
   selector:
     app: {{ .SlugName }}
     version: {{ .Version }}
