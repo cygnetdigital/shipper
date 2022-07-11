@@ -54,6 +54,15 @@ func LoadProject(pwd string) (*Project, error) {
 		}
 
 		for _, sp := range expandedPaths {
+			isDir, err := existsAndIsDir(sp)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isDir {
+				continue
+			}
+
 			svcConfPath := filepath.Join(sp, "shipper.yaml")
 
 			bts, err := ioutil.ReadFile(svcConfPath)
@@ -79,4 +88,17 @@ func LoadProject(pwd string) (*Project, error) {
 	}
 
 	return nil, fmt.Errorf("%s not found in this or any parent directory", projectContextFile)
+}
+
+func existsAndIsDir(path string) (bool, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return stat.IsDir(), nil
 }
