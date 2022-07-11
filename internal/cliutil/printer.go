@@ -77,6 +77,12 @@ func (dp *DeployPrinter) printServices(w io.Writer, resp *handler.DeployResp) {
 	if resp.Source.ChecksRunning {
 		fmt.Fprintf(w, "\n🏗️   Waiting for checks to complete\n")
 	} else {
+		if len(resp.Services) == 0 {
+			fmt.Fprintf(w, "🤷  Nothing to deploy.\n")
+
+			return
+		}
+
 		fmt.Fprintf(w, "\n✅  Ready to deploy:\n")
 	}
 

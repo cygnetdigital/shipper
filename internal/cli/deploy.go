@@ -79,6 +79,10 @@ var Deploy = &cli.Command{
 			return nil
 		}
 
+		if len(dres.Services) == 0 {
+			return nil
+		}
+
 		resp := cliutil.StringPrompt("Deploy to production?")
 		if resp != "YES" {
 			return fmt.Errorf("aborted: only YES is accepted")
